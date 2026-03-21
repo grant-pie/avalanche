@@ -1,0 +1,23 @@
+{
+  "slug": "Avalanche",
+  "name": "Avalanche",
+  "version": "2.0.0",
+  "license": "proprietary",
+  "brand": "Knoppies",
+  "author": "Grant Pieterse",
+  "authorEmail": "grant@grantpieterse.com",
+  "authorUrl": "https://knoppies.grantpieterse.com",
+  "pluginUrl": "https://knoppies.grantpieterse.com/avalanche",
+  "manualUrl": "",
+  "sourceUrl": "https://github.com/grant-pie/avalanche",
+  "donateUrl": "",
+  "changelogUrl": "",
+  "modules": [
+    {
+      "slug": "Avalanche",
+      "name": "Avalanche",
+      "description": "Granular delay effect with pitch shifting, freeze, and reverse capabilities",
+      "tags": ["Effect", "Delay", "Granular"]
+    }
+  ]
+}
