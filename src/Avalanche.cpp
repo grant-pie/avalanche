@@ -484,10 +484,20 @@ struct AvalanchePanel : Widget {
 		nvgText(args.vg, mpx(20.0f),  mpx(105.5f), "IN",  NULL);
 		nvgText(args.vg, 302.f, mpx(105.5f), "OUT", NULL);
 
-		// KNOPPIES — centred between separator (101.9mm) and panel bottom (128.5mm)
+		// VONK — "VON" near-white, "K" accent purple, combined word centred
 		nvgFontSize(args.vg, 7.f);
-		nvgFillColor(args.vg, nvgRGB(0x55, 0x55, 0x55));
-		nvgText(args.vg, cx, mpx(115.2f), "KNOPPIES", NULL);
+		nvgTextAlign(args.vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		float vkBounds[4];
+		nvgTextBounds(args.vg, 0, 0, "VON",  NULL, vkBounds);
+		float vonWidth = vkBounds[2] - vkBounds[0];
+		nvgTextBounds(args.vg, 0, 0, "VONK", NULL, vkBounds);
+		float vonkWidth = vkBounds[2] - vkBounds[0];
+		float vkX = cx - vonkWidth / 2.f;
+		float vkY = mpx(115.2f);
+		nvgFillColor(args.vg, nvgRGB(0xf4, 0xf5, 0xf7));
+		nvgText(args.vg, vkX,            vkY, "VON", NULL);
+		nvgFillColor(args.vg, nvgRGB(0xc0, 0x84, 0xfc));
+		nvgText(args.vg, vkX + vonWidth, vkY, "K",   NULL);
 	}
 };
 

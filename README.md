@@ -65,4 +65,4 @@ make install
 
 ## License
 
-Proprietary — © Grant Pieterse / Knoppies
+Proprietary — © Grant Pieterse / Vonk
