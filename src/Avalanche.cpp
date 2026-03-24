@@ -1,6 +1,7 @@
 #include "plugin.hpp"
 #include <cmath>
 #include <algorithm>
+#include <atomic>
 
 static const int BUFFER_SIZE = 480000; // 10 seconds @ 48kHz
 static const int MAX_GRAINS = 64;
@@ -60,12 +61,12 @@ struct Avalanche : Module {
 	float grainTimer = 0.f;
 	float sampleRate = 48000.f;
 
-	// For display
+	// For display (written by audio thread, read by UI thread)
 	float displayBuffer[256] = {};
 	int displayUpdateCounter = 0;
-	int displayWritePos = 0;
-	float activeGrainPositions[MAX_GRAINS];
-	int activeGrainCount = 0;
+	std::atomic<int> displayWritePos{0};
+	float activeGrainPositions[MAX_GRAINS] = {};
+	std::atomic<int> activeGrainCount{0};
 
 	// Schmitt triggers for buttons and gates
 	dsp::SchmittTrigger freezeTrigger;
@@ -292,14 +293,13 @@ struct Avalanche : Module {
 	}
 };
 
-struct BufferDisplay : LightWidget {
-	Avalanche* module;
+struct BufferDisplay : Widget {
+	Avalanche* module = nullptr;
 
-	BufferDisplay() {
-		// Size is set by the parent widget
-	}
+	BufferDisplay() {}
 
 	void draw(const DrawArgs& args) override {
+		nvgSave(args.vg);
 		nvgScissor(args.vg, 0, 0, box.size.x, box.size.y);
 
 		// Background
@@ -319,6 +319,7 @@ struct BufferDisplay : LightWidget {
 			nvgStrokeColor(args.vg, nvgRGBA(100, 200, 255, 150));
 			nvgStrokeWidth(args.vg, 1.f);
 			nvgStroke(args.vg);
+			nvgRestore(args.vg);
 			return;
 		}
 
@@ -360,7 +361,7 @@ struct BufferDisplay : LightWidget {
 		nvgStrokeWidth(args.vg, 1.f);
 		nvgStroke(args.vg);
 
-		nvgResetScissor(args.vg);
+		nvgRestore(args.vg);
 	}
 };
 
@@ -369,6 +370,7 @@ struct PanelLabel : Widget {
 	NVGcolor color;
 	float fontSize;
 	int align;
+	std::shared_ptr<Font> font;
 
 	PanelLabel(Vec pos, std::string text, float fontSize = 11.f,
 	           NVGcolor color = nvgRGB(0xc0, 0xc0, 0xd0),
@@ -376,11 +378,10 @@ struct PanelLabel : Widget {
 		: text(text), color(color), fontSize(fontSize), align(align) {
 		box.pos = pos;
 		box.size = Vec(0, 0);
+		font = APP->window->loadFont(asset::system("res/fonts/ShareTechMono-Regular.ttf"));
 	}
 
 	void draw(const DrawArgs& args) override {
-		std::shared_ptr<Font> font = APP->window->loadFont(
-			asset::system("res/fonts/ShareTechMono-Regular.ttf"));
 		if (!font)
 			return;
 		nvgFontFaceId(args.vg, font->handle);
@@ -392,8 +393,11 @@ struct PanelLabel : Widget {
 };
 
 struct AvalanchePanel : Widget {
+	std::shared_ptr<Font> font;
+
 	AvalanchePanel(Vec size) {
 		box.size = size;
+		font = APP->window->loadFont(asset::system("res/fonts/ShareTechMono-Regular.ttf"));
 	}
 
 	void draw(const DrawArgs& args) override {
@@ -438,8 +442,6 @@ struct AvalanchePanel : Widget {
 		sep(101.9f); // Above audio I/O
 
 		// Font
-		std::shared_ptr<Font> font = APP->window->loadFont(
-			asset::system("res/fonts/ShareTechMono-Regular.ttf"));
 		if (!font) return;
 		nvgFontFaceId(args.vg, font->handle);
 		nvgTextAlign(args.vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
